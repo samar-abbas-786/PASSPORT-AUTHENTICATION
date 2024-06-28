@@ -1,6 +1,7 @@
 const LocalStrategy = require("passport-local").Strategy;
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
+const passport = require("passport-local");
 
 //Load User Data
 const User = require("../model/User");
@@ -18,7 +19,7 @@ module.exports = function (passport) {
           }
 
           //Match Password
-          bcrypt.compare(user.password, password, (err, isMatch) => {
+          bcrypt.compare(password, user.password, (err, isMatch) => {
             if (err) throw err;
             if (isMatch) {
               return done(null, user);
@@ -32,4 +33,17 @@ module.exports = function (passport) {
         });
     })
   );
+
+  passport.serializeUser((user, done) => {
+    done(null, user.id);
+  });
+
+  passport.deserializeUser(async (id, done) => {
+    try {
+      const user = await User.findById(id);
+      done(null, user);
+    } catch (err) {
+      done(err, null);
+    }
+  });
 };
